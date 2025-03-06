@@ -1,215 +1,111 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Renewable Energy Power Calculator</title>
-    <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --background-color: #f8f9fa;
-        }
+from kivy.app import App
+from kivy.uix.tabbedpanel import TabbedPanel, TabbedPanelItem
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.label import Label
+from kivy.uix.textinput import TextInput
+from kivy.uix.button import Button
+from kivy.metrics import dp
+import math
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: var(--background-color);
-        }
-
-        .calculator {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-        }
-
-        h1, h2 {
-            color: var(--primary-color);
-            margin-bottom: 30px;
-        }
-
-        h1 {
-            text-align: center;
-            font-size: 2.5em;
-        }
-
-        .calculator-section {
-            margin-bottom: 40px;
-            padding: 20px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--primary-color);
-            font-weight: 500;
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--secondary-color);
-        }
-
-        button {
-            background-color: var(--secondary-color);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s ease;
-        }
-
-        button:hover {
-            background-color: #2980b9;
-        }
-
-        .result {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 6px;
-            background-color: #e8f4fc;
-            color: var(--primary-color);
-        }
-
-        .unit {
-            color: #7f8c8d;
-            font-size: 0.9em;
-            margin-left: 5px;
-        }
-
-        .error {
-            color: #e74c3c;
-            margin-top: 10px;
-            font-size: 0.9em;
-        }
-    </style>
-</head>
-<body>
-    <div class="calculator">
-        <h1>Renewable Energy Power Calculator</h1>
+class EnergyTabbedPanel(TabbedPanel):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.do_default_tab = False
         
-        <div class="calculator-section">
-            <h2>Solar Power Calculation</h2>
-            <div class="input-group">
-                <label>Solar Panel Area <span class="unit">(m²)</span></label>
-                <input type="number" id="solarArea" step="0.1" min="0" placeholder="Enter area">
-            </div>
-            <div class="input-group">
-                <label>Daily Sunlight Hours <span class="unit">(hours/day)</span></label>
-                <input type="number" id="sunlightHours" step="0.5" min="0" max="24" placeholder="Enter hours">
-            </div>
-            <button id="calculateSolar">Calculate Solar Power</button>
-            <div class="result" id="solarResult"></div>
-            <div class="error" id="solarError"></div>
-        </div>
+        # Create and add tabs
+        self.add_widget(self.create_solar_tab())
+        self.add_widget(self.create_wind_tab())
+    
+    def create_solar_tab(self):
+        # Create tab container
+        tab = TabbedPanelItem(text='Solar Calculator')
+        content = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(10))
+        
+        # Input fields
+        content.add_widget(Label(text="Solar Panel Area (m²):", size_hint_y=None, height=dp(30)))
+        self.solar_area = TextInput(multiline=False)
+        content.add_widget(self.solar_area)
+        
+        content.add_widget(Label(text="Daily Sunlight Hours:", size_hint_y=None, height=dp(30)))
+        self.sunlight_hours = TextInput(multiline=False)
+        content.add_widget(self.sunlight_hours)
+        
+        # Calculate button
+        calc_btn = Button(text="Calculate Solar Power", size_hint_y=None, height=dp(50))
+        calc_btn.bind(on_press=self.calculate_solar)
+        content.add_widget(calc_btn)
+        
+        # Result display
+        self.solar_result = Label(text="", color=(0, 0, 1, 1))
+        content.add_widget(self.solar_result)
+        
+        tab.add_widget(content)
+        return tab
+    
+    def create_wind_tab(self):
+        # Create tab container
+        tab = TabbedPanelItem(text='Wind Calculator')
+        content = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(10))
+        
+        # Input fields
+        content.add_widget(Label(text="Turbine Blade Radius (m):", size_hint_y=None, height=dp(30)))
+        self.blade_radius = TextInput(multiline=False)
+        content.add_widget(self.blade_radius)
+        
+        content.add_widget(Label(text="Wind Speed (m/s):", size_hint_y=None, height=dp(30)))
+        self.wind_speed = TextInput(multiline=False)
+        content.add_widget(self.wind_speed)
+        
+        content.add_widget(Label(text="Operating Hours:", size_hint_y=None, height=dp(30)))
+        self.wind_hours = TextInput(multiline=False)
+        content.add_widget(self.wind_hours)
+        
+        # Calculate button
+        calc_btn = Button(text="Calculate Wind Power", size_hint_y=None, height=dp(50))
+        calc_btn.bind(on_press=self.calculate_wind)
+        content.add_widget(calc_btn)
+        
+        # Result display
+        self.wind_result = Label(text="", color=(0, 0.5, 0, 1))
+        content.add_widget(self.wind_result)
+        
+        tab.add_widget(content)
+        return tab
+    
+    def calculate_solar(self, instance):
+        SOLAR_EFFICIENCY = 0.20
+        SOLAR_INSOLATION = 5  # kWh/m²/day
+        
+        try:
+            area = float(self.solar_area.text)
+            hours = float(self.sunlight_hours.text)
+            power = area * SOLAR_INSOLATION * SOLAR_EFFICIENCY * hours
+            self.solar_result.text = f"Solar Power Generated: {power:.2f} kWh"
+            self.solar_result.color = (0, 0, 1, 1)  # Blue
+        except ValueError:
+            self.solar_result.text = "Invalid input! Please enter numbers."
+            self.solar_result.color = (1, 0, 0, 1)  # Red
+    
+    def calculate_wind(self, instance):
+        AIR_DENSITY = 1.225  # kg/m³
+        WIND_EFFICIENCY = 0.40
+        
+        try:
+            radius = float(self.blade_radius.text)
+            speed = float(self.wind_speed.text)
+            hours = float(self.wind_hours.text)
+            
+            swept_area = math.pi * (radius ** 2)
+            power = 0.5 * AIR_DENSITY * swept_area * (speed ** 3) * WIND_EFFICIENCY * hours
+            self.wind_result.text = f"Wind Power Generated: {power:.2f} kWh"
+            self.wind_result.color = (0, 0.5, 0, 1)  # Green
+        except ValueError:
+            self.wind_result.text = "Invalid input! Please enter numbers."
+            self.wind_result.color = (1, 0, 0, 1)  # Red
 
-        <div class="calculator-section">
-            <h2>Wind Power Calculation</h2>
-            <div class="input-group">
-                <label>Turbine Blade Radius <span class="unit">(meters)</span></label>
-                <input type="number" id="bladeRadius" step="0.1" min="0" placeholder="Enter radius">
-            </div>
-            <div class="input-group">
-                <label>Average Wind Speed <span class="unit">(m/s)</span></label>
-                <input type="number" id="windSpeed" step="0.1" min="0" placeholder="Enter speed">
-            </div>
-            <div class="input-group">
-                <label>Daily Operating Hours <span class="unit">(hours/day)</span></label>
-                <input type="number" id="windHours" step="0.5" min="0" max="24" placeholder="Enter hours">
-            </div>
-            <button id="calculateWind">Calculate Wind Power</button>
-            <div class="result" id="windResult"></div>
-            <div class="error" id="windError"></div>
-        </div>
-    </div>
+class EnergyCalculatorApp(App):
+    def build(self):
+        return EnergyTabbedPanel()
 
-    <script>
-        // Constants
-        const SOLAR_PANEL_EFFICIENCY = 0.20; // 20% efficiency
-        const SOLAR_IRRADIANCE = 1; // 1 kW/m² standard test conditions
-        const AIR_DENSITY = 1.225; // kg/m³ at sea level
-        const WIND_TURBINE_EFFICIENCY = 0.35; // 35% system efficiency
-
-        // Solar Power Calculation
-        document.getElementById('calculateSolar').addEventListener('click', () => {
-            const area = parseFloat(document.getElementById('solarArea').value);
-            const hours = parseFloat(document.getElementById('sunlightHours').value);
-            const errorElement = document.getElementById('solarError');
-            const resultElement = document.getElementById('solarResult');
-
-            errorElement.textContent = '';
-            resultElement.textContent = '';
-
-            if (!validateInputs([area, hours], ['Area', 'Sunlight hours'])) {
-                errorElement.textContent = 'Please enter valid positive numbers';
-                return;
-            }
-
-            const power = area * SOLAR_IRRADIANCE * SOLAR_PANEL_EFFICIENCY;
-            const dailyEnergy = power * hours;
-            resultElement.innerHTML = `
-                Daily Solar Energy Production: <strong>${dailyEnergy.toFixed(2)} kWh</strong><br>
-                <small>Calculation: ${area}m² × ${SOLAR_IRRADIANCE}kW/m² × ${SOLAR_PANEL_EFFICIENCY} efficiency × ${hours}h</small>
-            `;
-        });
-
-        // Wind Power Calculation
-        document.getElementById('calculateWind').addEventListener('click', () => {
-            const radius = parseFloat(document.getElementById('bladeRadius').value);
-            const windSpeed = parseFloat(document.getElementById('windSpeed').value);
-            const hours = parseFloat(document.getElementById('windHours').value);
-            const errorElement = document.getElementById('windError');
-            const resultElement = document.getElementById('windResult');
-
-            errorElement.textContent = '';
-            resultElement.textContent = '';
-
-            if (!validateInputs([radius, windSpeed, hours], ['Radius', 'Wind speed', 'Operating hours'])) {
-                errorElement.textContent = 'Please enter valid positive numbers';
-                return;
-            }
-
-            const sweptArea = Math.PI * Math.pow(radius, 2);
-            const windPower = 0.5 * AIR_DENSITY * sweptArea * Math.pow(windSpeed, 3) * WIND_TURBINE_EFFICIENCY;
-            const dailyEnergy = (windPower * hours) / 1000; // Convert to kWh
-
-            resultElement.innerHTML = `
-                Daily Wind Energy Production: <strong>${dailyEnergy.toFixed(2)} kWh</strong><br>
-                <small>Calculation: 0.5 × ${AIR_DENSITY}kg/m³ × ${sweptArea.toFixed(2)}m² × ${windSpeed}m/s³ × ${WIND_TURBINE_EFFICIENCY} efficiency × ${hours}h ÷ 1000</small>
-            `;
-        });
-
-        // Validation function
-        function validateInputs(values, labels) {
-            return values.every((value, index) => {
-                if (isNaN(value) || value <= 0) {
-                    alert(`Please enter a valid positive number for ${labels[index]}`);
-                    return false;
-                }
-                return true;
-            });
-        }
-    </script>
-</body>
-</html>
+if __name__ == '__main__':
+    EnergyCalculatorApp().run()
