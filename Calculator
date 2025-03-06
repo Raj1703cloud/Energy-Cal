@@ -5,72 +5,210 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Renewable Energy Power Calculator</title>
     <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --background-color: #f8f9fa;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--background-color);
         }
+
         .calculator {
-            max-width: 500px;
+            max-width: 800px;
             margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
         }
-        label, input {
+
+        h1, h2 {
+            color: var(--primary-color);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        .calculator-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
             display: block;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+            font-weight: 500;
         }
-        .result{
-            font-weight: bold;
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
+
+        button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .result {
             margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            background-color: #e8f4fc;
+            color: var(--primary-color);
+        }
+
+        .unit {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-left: 5px;
+        }
+
+        .error {
+            color: #e74c3c;
+            margin-top: 10px;
+            font-size: 0.9em;
         }
     </style>
 </head>
 <body>
     <div class="calculator">
         <h1>Renewable Energy Power Calculator</h1>
-        <h2>Solar Power Calculation</h2>
-        <label for="solarArea">Solar Panel Area (m²):</label>
-        <input type="number" id="solarArea" placeholder="Enter area in square meters">
-        <label for="sunlightHours">Hours of Sunlight:</label>
-        <input type="number" id="sunlightHours" placeholder="Enter hours of sunlight">
-        <button onclick="calculateSolarPower()">Calculate Solar Power</button>
-        <div class="result" id="solarResult"></div>
-        <h2>Wind Power Calculation</h2>
-        <label for="bladeRadius">Wind Turbine Blade Radius (m):</label>
-        <input type="number" id="bladeRadius" placeholder="Enter blade radius in meters">
-        <label for="windSpeed">Wind Speed (m/s):</label>
-        <input type="number" id="windSpeed" placeholder="Enter wind speed in meters per second">
-        <label for="windHours">Hours of Wind:</label>
-        <input type="number" id="windHours" placeholder="Enter hours of wind">
-        <button onclick="calculateWindPower()">Calculate Wind Power</button>
-        <div class="result" id="windResult"></div>
+        
+        <div class="calculator-section">
+            <h2>Solar Power Calculation</h2>
+            <div class="input-group">
+                <label>Solar Panel Area <span class="unit">(m²)</span></label>
+                <input type="number" id="solarArea" step="0.1" min="0" placeholder="Enter area">
+            </div>
+            <div class="input-group">
+                <label>Daily Sunlight Hours <span class="unit">(hours/day)</span></label>
+                <input type="number" id="sunlightHours" step="0.5" min="0" max="24" placeholder="Enter hours">
+            </div>
+            <button id="calculateSolar">Calculate Solar Power</button>
+            <div class="result" id="solarResult"></div>
+            <div class="error" id="solarError"></div>
+        </div>
+
+        <div class="calculator-section">
+            <h2>Wind Power Calculation</h2>
+            <div class="input-group">
+                <label>Turbine Blade Radius <span class="unit">(meters)</span></label>
+                <input type="number" id="bladeRadius" step="0.1" min="0" placeholder="Enter radius">
+            </div>
+            <div class="input-group">
+                <label>Average Wind Speed <span class="unit">(m/s)</span></label>
+                <input type="number" id="windSpeed" step="0.1" min="0" placeholder="Enter speed">
+            </div>
+            <div class="input-group">
+                <label>Daily Operating Hours <span class="unit">(hours/day)</span></label>
+                <input type="number" id="windHours" step="0.5" min="0" max="24" placeholder="Enter hours">
+            </div>
+            <button id="calculateWind">Calculate Wind Power</button>
+            <div class="result" id="windResult"></div>
+            <div class="error" id="windError"></div>
+        </div>
     </div>
+
     <script>
-        const SOLAR_PANEL_EFFICIENCY = 0.20; 
-        const SOLAR_INSOLATION = 5;  
-        const AIR_DENSITY = 1.225; 
-        const WIND_TURBINE_EFFICIENCY = 0.40;
-        function calculateSolarPower() 
-{
-            const area = parseFloat(document.getElementById("solarArea").value);
-            const hours = parseFloat(document.getElementById("sunlightHours").value);
-            if (isNaN(area) || isNaN(hours)) {
-                document.getElementById("solarResult").innerHTML = "Please enter valid inputs for solar power.";
-                return;
-            }
-            const solarPower = area * SOLAR_INSOLATION * SOLAR_PANEL_EFFICIENCY * hours;
-            document.getElementById("solarResult").innerHTML = Solar Power Generated: ${solarPower.toFixed(2)} kWh;
-        }
-        function calculateWindPower() {
-            const radius = parseFloat(document.getElementById("bladeRadius").value);
-            const windSpeed = parseFloat(document.getElementById("windSpeed").value);
-            const hours = parseFloat(document.getElementById("windHours").value);
-            if (isNaN(radius) || isNaN(windSpeed) || isNaN(hours)) {
-                document.getElementById("windResult").innerHTML = "Please enter valid inputs for wind power.";
+        // Constants
+        const SOLAR_PANEL_EFFICIENCY = 0.20; // 20% efficiency
+        const SOLAR_IRRADIANCE = 1; // 1 kW/m² standard test conditions
+        const AIR_DENSITY = 1.225; // kg/m³ at sea level
+        const WIND_TURBINE_EFFICIENCY = 0.35; // 35% system efficiency
+
+        // Solar Power Calculation
+        document.getElementById('calculateSolar').addEventListener('click', () => {
+            const area = parseFloat(document.getElementById('solarArea').value);
+            const hours = parseFloat(document.getElementById('sunlightHours').value);
+            const errorElement = document.getElementById('solarError');
+            const resultElement = document.getElementById('solarResult');
+
+            errorElement.textContent = '';
+            resultElement.textContent = '';
+
+            if (!validateInputs([area, hours], ['Area', 'Sunlight hours'])) {
+                errorElement.textContent = 'Please enter valid positive numbers';
                 return;
             }
 
-            const sweptArea = Math.PI * Math.pow(radius, 2); 
-            const windPower = 0.5 * AIR_DENSITY * sweptArea * Math.pow(windSpeed, 3) * WIND_TURBINE_EFFICIENCY * hours;
-            document.getElementById("windResult").innerHTML = Wind Power Generated: ${windPower.toFixed(2)} kWh;
+            const power = area * SOLAR_IRRADIANCE * SOLAR_PANEL_EFFICIENCY;
+            const dailyEnergy = power * hours;
+            resultElement.innerHTML = `
+                Daily Solar Energy Production: <strong>${dailyEnergy.toFixed(2)} kWh</strong><br>
+                <small>Calculation: ${area}m² × ${SOLAR_IRRADIANCE}kW/m² × ${SOLAR_PANEL_EFFICIENCY} efficiency × ${hours}h</small>
+            `;
+        });
+
+        // Wind Power Calculation
+        document.getElementById('calculateWind').addEventListener('click', () => {
+            const radius = parseFloat(document.getElementById('bladeRadius').value);
+            const windSpeed = parseFloat(document.getElementById('windSpeed').value);
+            const hours = parseFloat(document.getElementById('windHours').value);
+            const errorElement = document.getElementById('windError');
+            const resultElement = document.getElementById('windResult');
+
+            errorElement.textContent = '';
+            resultElement.textContent = '';
+
+            if (!validateInputs([radius, windSpeed, hours], ['Radius', 'Wind speed', 'Operating hours'])) {
+                errorElement.textContent = 'Please enter valid positive numbers';
+                return;
+            }
+
+            const sweptArea = Math.PI * Math.pow(radius, 2);
+            const windPower = 0.5 * AIR_DENSITY * sweptArea * Math.pow(windSpeed, 3) * WIND_TURBINE_EFFICIENCY;
+            const dailyEnergy = (windPower * hours) / 1000; // Convert to kWh
+
+            resultElement.innerHTML = `
+                Daily Wind Energy Production: <strong>${dailyEnergy.toFixed(2)} kWh</strong><br>
+                <small>Calculation: 0.5 × ${AIR_DENSITY}kg/m³ × ${sweptArea.toFixed(2)}m² × ${windSpeed}m/s³ × ${WIND_TURBINE_EFFICIENCY} efficiency × ${hours}h ÷ 1000</small>
+            `;
+        });
+
+        // Validation function
+        function validateInputs(values, labels) {
+            return values.every((value, index) => {
+                if (isNaN(value) || value <= 0) {
+                    alert(`Please enter a valid positive number for ${labels[index]}`);
+                    return false;
+                }
+                return true;
+            });
         }
     </script>
 </body>
